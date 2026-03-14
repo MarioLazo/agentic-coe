@@ -1,4 +1,4 @@
-# 🔍 The Seven Blind Spots: A Deep Dive
+# 🔍 The Eight Blind Spots: A Deep Dive
 
 > **Why your RAG system seems "stupid" and how to fix it. A practical guide with real failure scenarios, diagnostic tools, and battle-tested solutions.**
 
@@ -15,13 +15,14 @@ That's why these problems are "blind spots." The system keeps running, looking f
 
 | What Went Wrong | Pizza Version | RAG Version |
 |-----------------|--------------|-------------|
+| **Insufficient or inconsistent sources** | Menu says "gluten-free available" but kitchen stopped carrying it | Data sources don't have the info or contradict each other |
 | **Missed Retrieval** | Kitchen has pepperoni, can't find it, sends cheese | Doc exists, search doesn't find it |
 | **Context Misalignment** | "Something spicy" → hot sauce packets | Related docs, wrong answer |
 | **Stale Indexes** | Menu says $12, price is $15 | Outdated info served as truth |
+| **Context utilization failure** | "No olives, extra cheese, NO OLIVES" → olives | Critical info in context is ignored |
 | **Hallucination** | "Yes we have gluten-free!" (they don't) | AI makes stuff up |
-| **Lost-in-the-Middle** | "No olives, extra cheese, NO OLIVES" → olives | Critical info ignored |
-| **Semantic Collapse** | All pizzas labeled "pizza" | Can't distinguish documents |
-| **No Evaluation** | Never ask "how was it?" | No way to measure quality |
+| **Answer Irrelevance** | Asked for pepperoni, got pepperoni plus a history of Italian cheese-making | Response includes parts that don't address the query |
+| **Answer Incompleteness** | Asked for half-pepperoni half-veggie, only got the pepperoni half | Response doesn't answer the complete question |
 
 **This guide:** Deep analysis of each blind spot + real case studies + diagnostic checklist.
 
@@ -45,20 +46,76 @@ Your users notice. Your metrics (if you have them) might show a dip. But the sys
 
 ## Table of Contents
 
-1. [Missed Retrieval](#1-missed-retrieval---the-needle-in-the-haystack-problem)
-2. [Context Misalignment](#2-context-misalignment---right-ballpark-wrong-answer)
-3. [Stale Indexes](#3-stale-indexes---the-time-traveler-problem)
-4. [Hallucination](#4-hallucination---confident-fabrication)
-5. [Lost-in-the-Middle](#5-lost-in-the-middle---the-attention-blindspot)
-6. [Semantic Collapse](#6-semantic-collapse---when-everything-looks-the-same)
-7. [No Evaluation](#7-no-evaluation---the-meta-blind-spot)
-8. [Case Studies: Why AI Assistants Seem "Stupid"](#case-studies-why-ai-assistants-seem-stupid)
-9. [Interactive Diagnostic Checklist](#-interactive-diagnostic-checklist)
-10. [Quick Reference: How Blind Spots Interact](#blind-spot-interactions-the-cascade-effect)
+1. [Insufficient or Inconsistent Sources](#1-insufficient-or-inconsistent-sources---the-foundation-problem)
+2. [Missed Retrieval](#2-missed-retrieval---the-needle-in-the-haystack-problem)
+3. [Context Misalignment](#3-context-misalignment---right-ballpark-wrong-answer)
+4. [Stale Indexes](#4-stale-indexes---the-time-traveler-problem)
+5. [Context Utilization Failure](#5-context-utilization-failure---the-attention-blindspot)
+6. [Hallucination](#6-hallucination---confident-fabrication)
+7. [Answer Irrelevance](#7-answer-irrelevance---correct-but-off-topic)
+8. [Answer Incompleteness](#8-answer-incompleteness---partial-answers)
+9. [Case Studies: Why AI Assistants Seem "Stupid"](#case-studies-why-ai-assistants-seem-stupid)
+10. [Interactive Diagnostic Checklist](#-interactive-diagnostic-checklist)
+11. [Quick Reference: How Blind Spots Interact](#blind-spot-interactions-the-cascade-effect)
 
 ---
 
-# 1. Missed Retrieval — The Needle in the Haystack Problem
+# 1. Insufficient or Inconsistent Sources — The Foundation Problem
+
+## What's Happening
+
+The data sources themselves don't contain the information needed, or contain contradictory information. No amount of retrieval optimization can fix this — if the answer isn't in your knowledge base, or if your sources disagree, the system will fail.
+
+```
+You: "What's the coverage limit for dental implants?"
+Source A: "Dental implants are covered up to $2,000 per year."
+Source B: "Dental implants are not covered under the standard plan."
+
+❌ Both documents exist, both are indexed, both are retrieved
+💀 Sources contradict each other — system has no way to resolve this
+```
+
+## Why This Goes Unnoticed
+
+- Retrieval works perfectly (documents ARE found)
+- Generation looks confident (picks one source)
+- No system error — the problem is in the data, not the pipeline
+- Often only discovered when users cross-reference with real-world experience
+
+## Real-World Examples
+
+| Scenario | What Happened | Impact |
+|----------|---------------|--------|
+| **Insurance** | Policy docs from different years in same index | Customers given wrong coverage info |
+| **Technical docs** | API v1 and v2 docs coexist, no version filtering | Developers follow wrong integration steps |
+| **HR policies** | Regional variations not distinguished | Employees get policies for wrong office |
+| **Product specs** | Draft and final specs both indexed | Engineering decisions based on draft numbers |
+
+## Detection
+
+- Compare source documents for contradictions on key topics
+- Track user complaints where the system gave a "correct" answer that turned out wrong
+- Audit source coverage: for a sample of common queries, verify the answer actually exists in your sources
+
+## Fixes
+
+### 🟢 Quick Wins
+| Fix | Implementation |
+|-----|----------------|
+| **Source audit** | Verify key topics are actually covered in your knowledge base |
+| **Contradiction detection** | Flag documents that make conflicting claims on the same topic |
+| **Version control** | Ensure only current versions of documents are indexed |
+
+### 🟡 Medium Effort
+| Fix | Implementation |
+|-----|----------------|
+| **Source gap analysis** | Compare common queries against available documentation |
+| **Metadata-based filtering** | Tag documents with version, region, effective date |
+| **Authoritative source ranking** | When sources conflict, prefer the most authoritative |
+
+---
+
+# 2. Missed Retrieval — The Needle in the Haystack Problem
 
 ## What's Happening
 
@@ -177,11 +234,11 @@ def missed_retrieval_diagnostic(query, retrieved_docs, all_docs):
 
 ---
 
-# 2. Context Misalignment — Right Ballpark, Wrong Answer
+# 3. Context Misalignment — Right Ballpark, Wrong Answer
 
 ## What's Happening
 
-Retrieved documents are **topically related** but don't actually answer the specific question. High similarity scores mask the mismatch.
+Retrieved documents are **topically related** but don't fully answer the specific question. High similarity scores mask the mismatch.
 
 ```
 You: "What happens if I miss the deadline to enroll in benefits?"
@@ -196,11 +253,22 @@ RAG: "Benefits enrollment is open from Nov 1-15 each year..."
 
 - Retrieval metrics look great (high similarity!)
 - The response sounds relevant (it's about benefits!)
-- But it fundamentally misunderstands the **intent**
+- But the retrieved context doesn't actually address the question
+
+## Common Causes
+
+Context misalignment can arise from multiple sources:
+
+| Cause | Description | Example |
+|-------|-------------|---------|
+| **Intent mismatch** | Topic matches but query intent differs | Troubleshooting query gets how-to docs |
+| **Granularity mismatch** | Retrieved docs are too broad or too narrow | Asked about a specific feature, got the product overview |
+| **Incomplete coverage** | Retrieved docs cover part of the question but not all | Multi-part question, only first part addressed |
+| **Topical similarity without relevance** | High cosine similarity but not actually useful | "Send money" matches both "how to send" and "how to reverse" |
 
 ## The Intent Taxonomy
 
-Most queries have one of these intents:
+One of the most common causes is intent mismatch. Most queries have one of these intents:
 
 | Intent Type | Example Query | What User Needs |
 |-------------|---------------|-----------------|
@@ -212,7 +280,7 @@ Most queries have one of these intents:
 | **Temporal** | "When does X?" | Dates, deadlines, timing |
 | **Eligibility** | "Can I X?" | Rules, requirements |
 
-**Context misalignment happens when retrieval matches topic but not intent.**
+**Intent mismatch is the most frequent cause, but not the only one — always check for granularity and coverage issues too.**
 
 ## Real-World Examples
 
@@ -301,7 +369,7 @@ def route_query(query, intent):
 
 ---
 
-# 3. Stale Indexes — The Time Traveler Problem
+# 4. Stale Indexes — The Time Traveler Problem
 
 ## What's Happening
 
@@ -468,7 +536,7 @@ flowchart LR
 
 ---
 
-# 4. Hallucination — Confident Fabrication
+# 6. Hallucination — Confident Fabrication
 
 ## What's Happening
 
@@ -492,10 +560,17 @@ RAG: "Our product is certified for ISO 9001, SOC 2, and HIPAA compliance."
 
 ## Hallucination Taxonomy
 
+**Core hallucination types:**
+
 | Type | Description | Example | Danger Level |
 |------|-------------|---------|--------------|
 | **Intrinsic** | Contradicts the context | Context: "30 days" → Response: "60 days" | 🔴 Critical |
 | **Extrinsic** | Adds info not in context | Invents statistics, names, dates | 🔴 Critical |
+
+**Semantic distortions** (common but not exhaustive examples of meaning-level errors):
+
+| Type | Description | Example | Danger Level |
+|------|-------------|---------|--------------|
 | **Paraphrase drift** | Subtly changes meaning | "May cause" → "Causes" | 🟡 Medium |
 | **Confidence inflation** | Hedged → Definitive | "Possibly X" → "Definitely X" | 🟡 Medium |
 | **Entity confusion** | Swaps similar entities | Wrong product, wrong person | 🔴 Critical |
@@ -624,11 +699,11 @@ QUESTION: {query}
 
 ---
 
-# 5. Lost-in-the-Middle — The Attention Blindspot
+# 5. Context Utilization Failure — The Attention Blindspot
 
 ## What's Happening
 
-LLMs pay more attention to the beginning and end of their context window, often ignoring information in the middle. Critical details get overlooked.
+Critical information is present in the context but gets ignored by the LLM. The most well-studied cause is the "lost-in-the-middle" effect — LLMs pay more attention to the beginning and end of their context window — but this can also happen due to context overload, conflicting signals in the context, or the model simply failing to synthesize across multiple passages.
 
 ```
 Context: [Doc1: intro] [Doc2: setup] [Doc3: THE ANSWER] [Doc4: related] [Doc5: summary]
@@ -761,7 +836,100 @@ def sandwich_ordering(query, retrieved_docs, scores):
 
 ---
 
-# 6. Semantic Collapse — When Everything Looks the Same
+# 7. Answer Irrelevance — Correct but Off-Topic
+
+## What's Happening
+
+The retrieved context is correct and sufficient, but the LLM's response includes parts that don't address the query. The answer may contain accurate information, but it's not what was asked.
+
+```
+You: "How do I reset my password?"
+Context: Complete password reset instructions + account security overview
+RAG: "To reset your password, go to Settings > Security > Reset Password.
+      Additionally, it's important to use strong passwords with at least 12
+      characters, enable 2FA, and review your login history regularly..."
+
+❌ The reset instructions are correct
+💀 But the security lecture wasn't asked for and buries the answer
+```
+
+## Why This Goes Unnoticed
+
+- The response IS accurate (nothing wrong factually)
+- Relevant information IS in there
+- But signal-to-noise ratio is poor
+- Users have to extract the actual answer from surrounding noise
+
+## Detection
+
+- Answer relevancy metrics (e.g., RAGAS answer_relevancy)
+- User feedback indicating "too verbose" or "didn't answer my question"
+- High faithfulness scores but low user satisfaction
+
+## Fixes
+
+### 🟢 Quick Wins
+| Fix | Implementation |
+|-----|----------------|
+| **Focused prompting** | "Answer ONLY what was asked. Do not add unsolicited information." |
+| **Query-type awareness** | Short factual queries get short answers |
+
+### 🟡 Medium Effort
+| Fix | Implementation |
+|-----|----------------|
+| **Answer relevancy evaluation** | Score responses against query scope |
+| **Response filtering** | Post-process to remove sentences not addressing the query |
+
+---
+
+# 8. Answer Incompleteness — Partial Answers
+
+## What's Happening
+
+The retrieved context is correct and sufficient to answer the full question, but the response only addresses part of it. The LLM generates a partial answer, missing key aspects the user asked about.
+
+```
+You: "Compare the Standard and Premium plans — pricing, features, and support levels."
+Context: Full comparison table with all three dimensions
+RAG: "The Standard plan costs $29/month while Premium is $99/month.
+      Premium includes advanced analytics and custom dashboards."
+
+❌ Pricing and features covered
+💀 Support levels completely omitted despite being in context and asked for
+```
+
+## Why This Goes Unnoticed
+
+- The response IS correct for what it covers
+- Partial answers still sound complete and confident
+- Users may not realize they didn't get the full picture
+- Standard metrics may score it highly if partial overlap counts
+
+## Detection
+
+- Check multi-part questions against response coverage
+- Answer completeness metrics
+- Track user follow-up rates (high follow-ups suggest incomplete first answers)
+
+## Fixes
+
+### 🟢 Quick Wins
+| Fix | Implementation |
+|-----|----------------|
+| **Query decomposition** | Break multi-part questions into sub-questions, answer each |
+| **Checklist prompting** | "Ensure your response addresses ALL parts of the question" |
+
+### 🟡 Medium Effort
+| Fix | Implementation |
+|-----|----------------|
+| **Completeness scoring** | Evaluate whether all query facets are addressed |
+| **Structured output** | For multi-part questions, use structured format matching query parts |
+
+---
+
+# Appendix: Semantic Collapse — When Everything Looks the Same
+
+> **Note:** Semantic collapse is a common root cause of [Missed Retrieval](#2-missed-retrieval---the-needle-in-the-haystack-problem) rather than a separate blind spot. It is documented here in depth because of its prevalence and diagnostic complexity.
 
 ## What's Happening
 
@@ -940,7 +1108,9 @@ def mmr_retrieval(query_embedding, doc_embeddings, doc_ids, k=5, lambda_param=0.
 
 ---
 
-# 7. No Evaluation — The Meta-Blind Spot
+# Appendix: No Evaluation — The Meta-Blind Spot
+
+> **Note:** Lack of evaluation is a cross-cutting concern that enables all other blind spots to go undetected, rather than a blind spot in its own right. It is documented here because of its critical importance. See also [Evaluation Framework](07-evaluation-framework.md).
 
 ## What's Happening
 
@@ -1127,7 +1297,7 @@ Policy updated in CMS → Webhook to indexer (FAILED SILENTLY)
                               ↓
                     Customers got wrong information
                               ↓
-                    [Blind Spot: No Evaluation]
+                    [No Evaluation]
                               ↓
                     No freshness monitoring to catch this
 ```
@@ -1200,7 +1370,7 @@ Generic SSO overview returned instead
 **Root Cause Analysis:**
 
 ```
-                    [Blind Spot: Lost-in-the-Middle]
+                    [Blind Spot: Context Utilization Failure]
                               ↓
 8 chunks retrieved, all scored 0.75-0.85 similarity
                               ↓
@@ -1282,7 +1452,7 @@ Response: "Drug X may increase bleeding risk with blood thinners"
 **Root Cause Analysis:**
 
 ```
-                    [Blind Spot: Semantic Collapse]
+                    [Blind Spot: Missed Retrieval / Semantic Collapse]
                               ↓
 Documentation style very consistent:
   - "Creating a new project: Click Settings > Projects > New..."
@@ -1352,7 +1522,7 @@ User frustrated, escalated to human
 
 # 📋 Interactive Diagnostic Checklist
 
-Use this checklist to audit your RAG system for the Seven Blind Spots.
+Use this checklist to audit your RAG system for the Eight Blind Spots.
 
 ---
 
@@ -1369,7 +1539,7 @@ Before starting, gather:
 
 ---
 
-## 1. Missed Retrieval Audit
+## 2. Missed Retrieval Audit
 
 ### Quick Checks
 | Check | How to Test | Pass | Fail |
@@ -1404,7 +1574,7 @@ Before starting, gather:
 
 ---
 
-## 2. Context Misalignment Audit
+## 3. Context Misalignment Audit
 
 ### Quick Checks
 | Check | How to Test | Pass | Fail |
@@ -1436,7 +1606,7 @@ Before starting, gather:
 
 ---
 
-## 3. Stale Indexes Audit
+## 4. Stale Indexes Audit
 
 ### Quick Checks
 | Check | How to Test | Pass | Fail |
@@ -1473,7 +1643,7 @@ Before starting, gather:
 
 ---
 
-## 4. Hallucination Audit
+## 6. Hallucination Audit
 
 ### Quick Checks
 | Check | How to Test | Pass | Fail |
@@ -1512,7 +1682,7 @@ Before starting, gather:
 
 ---
 
-## 5. Lost-in-the-Middle Audit
+## 5. Context Utilization Failure Audit
 
 ### Quick Checks
 | Check | How to Test | Pass | Fail |
@@ -1547,7 +1717,7 @@ Before starting, gather:
 
 ---
 
-## 6. Semantic Collapse Audit
+## Semantic Collapse Audit (relates to Blind Spot #2: Missed Retrieval)
 
 ### Quick Checks
 | Check | How to Test | Pass | Fail |
@@ -1585,7 +1755,7 @@ Before starting, gather:
 
 ---
 
-## 7. Evaluation Gaps Audit
+## Evaluation Gaps Audit
 
 ### Quick Checks
 | Check | How to Test | Pass | Fail |
@@ -1639,13 +1809,14 @@ For each blind spot, rate the severity:
 
 | Blind Spot | Evidence Found | Severity (1-5) | Priority |
 |--------|----------------|----------------|----------|
-| 1. Missed Retrieval | | | |
-| 2. Context Misalignment | | | |
-| 3. Stale Indexes | | | |
-| 4. Hallucination | | | |
-| 5. Lost-in-the-Middle | | | |
-| 6. Semantic Collapse | | | |
-| 7. No Evaluation | | | |
+| 1. Insufficient or inconsistent sources | | | |
+| 2. Missed Retrieval | | | |
+| 3. Context Misalignment | | | |
+| 4. Stale Indexes | | | |
+| 5. Context Utilization Failure | | | |
+| 6. Hallucination | | | |
+| 7. Answer Irrelevance | | | |
+| 8. Answer Incompleteness | | | |
 
 ### Severity Scale
 - **1 - None:** No evidence of this issue
@@ -1683,24 +1854,19 @@ The blind spots don't operate in isolation. They interact and compound:
 
 ```mermaid
 flowchart TD
-    SK7["#7 No Evaluation"] -->|"Enables ALL"| SK1
-    SK7 -->|"Enables ALL"| SK2
-    SK7 -->|"Enables ALL"| SK3
-    SK7 -->|"Enables ALL"| SK4
-    SK7 -->|"Enables ALL"| SK5
-    SK7 -->|"Enables ALL"| SK6
-    
-    SK3["#3 Stale Indexes"] -->|"Outdated docs"| SK1["#1 Missed Retrieval"]
-    SK6["#6 Semantic Collapse"] -->|"Can't distinguish"| SK2["#2 Context Misalignment"]
-    SK1 -->|"Missing context"| SK4["#4 Hallucination"]
-    SK2 -->|"Wrong context"| SK4
-    SK5["#5 Lost-in-Middle"] -->|"Missed info"| SK4
-    
-    style SK7 fill:#ff6b6b
-    style SK4 fill:#ffd93d
+    SK1["#1 Insufficient Sources"] -->|"Nothing to retrieve"| SK2["#2 Missed Retrieval"]
+    SK4["#4 Stale Indexes"] -->|"Outdated docs"| SK2
+    SK2 -->|"Missing context"| SK6["#6 Hallucination"]
+    SK3["#3 Context Misalignment"] -->|"Wrong context"| SK6
+    SK5["#5 Context Util. Failure"] -->|"Ignored info"| SK6
+    SK6 -->|"Bad output"| SK7["#7 Answer Irrelevance"]
+    SK6 -->|"Bad output"| SK8["#8 Answer Incompleteness"]
+
+    style SK1 fill:#ff6b6b
+    style SK6 fill:#ffd93d
 ```
 
-**Key Insight:** Fixing #7 (No Evaluation) has the highest leverage because it helps you detect ALL other blind spots.
+**Key Insight:** Blind spot #1 (Insufficient Sources) is the most fundamental — no downstream fix can compensate for missing or contradictory source data. Hallucination (#6) is the most common downstream consequence of upstream failures.
 
 ---
 
@@ -1708,13 +1874,14 @@ flowchart TD
 
 | # | Blind Spot | 1-Line Detection | 1-Line Fix |
 |---|--------|------------------|------------|
-| 1 | Missed Retrieval | BM25 finds docs vector misses | Add hybrid search |
-| 2 | Context Misalignment | High similarity, wrong answer | Add reranking |
-| 3 | Stale Indexes | Source newer than index | Event-driven updates |
-| 4 | Hallucination | Claims not in context | Grounding prompt |
-| 5 | Lost-in-Middle | Position affects accuracy | Relevance ordering |
-| 6 | Semantic Collapse | Mean similarity >0.65 | Dedupe + MMR |
-| 7 | No Evaluation | No quality metrics | Implement RAG Triad |
+| 1 | Insufficient or inconsistent sources | Answer doesn't exist in sources, or sources contradict | Source audit + contradiction detection |
+| 2 | Missed Retrieval | BM25 finds docs vector misses | Add hybrid search |
+| 3 | Context Misalignment | High similarity, wrong answer | Add reranking |
+| 4 | Stale Indexes | Source newer than index | Event-driven updates |
+| 5 | Context Utilization Failure | Position affects accuracy | Relevance ordering |
+| 6 | Hallucination | Claims not in context | Grounding prompt |
+| 7 | Answer Irrelevance | Correct response, doesn't address query | Focused prompting |
+| 8 | Answer Incompleteness | Multi-part question, partial answer | Query decomposition |
 
 ---
 
@@ -1737,7 +1904,7 @@ This deep dive synthesizes concepts and research from multiple sources:
 - **Semantic Collapse Thresholds:** Practitioner experience and vector database documentation
 
 ### Original Content
-The "Seven Blind Spots" framework, "RAG Smell Test," case study patterns, and all 🍕 layman explanations are original educational content created for this guide.
+The "Eight Blind Spots" framework, "RAG Smell Test," case study patterns, and all 🍕 layman explanations are original educational content created for this guide.
 
 For complete academic citations, see [Academic References](../resources/academic-references.md).
 

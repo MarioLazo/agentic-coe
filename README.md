@@ -77,7 +77,7 @@ Follow the [Documentation Index](docs/README.md) for the complete learning path 
 
 ---
 
-### 🔍 The Seven Blind Spots
+### 🔍 The Eight Blind Spots
 
 These failures don't throw errors. They don't show up in logs. They just **quietly deliver wrong answers** while your metrics look fine.
 
@@ -90,45 +90,51 @@ These failures don't throw errors. They don't show up in logs. They just **quiet
 </tr>
 <tr>
 <td>1</td>
-<td><b>🔍 Missed Retrieval</b></td>
-<td>The doc exists but doesn't surface</td>
-<td><i>"I know we have a doc about this..."</i></td>
+<td><b>📄 Insufficient or inconsistent sources</b></td>
+<td>The data sources do not have the information intended or are inconsistent in material ways</td>
+<td><i>"X = P..." but "When Y is Z, X is non-P"</i></td>
 </tr>
 <tr>
 <td>2</td>
-<td><b>🎯 Context Misalignment</b></td>
-<td>Retrieved docs are related but don't answer the question</td>
-<td><i>"That's not what I asked"</i></td>
+<td><b>🔍 Missed Retrieval</b></td>
+<td>The required information isn't retrieved due to, for example, semantic collapse</td>
+<td><i>"I know we have a doc about this..."</i></td>
 </tr>
 <tr>
 <td>3</td>
+<td><b>🎯 Context Misalignment</b></td>
+<td>Retrieved docs, even if related, do not fully answer the question</td>
+<td><i></i></td>
+</tr>
+<tr>
+<td>4</td>
 <td><b>📅 Stale Indexes</b></td>
 <td>Outdated info served as current truth</td>
 <td><i>"That price/policy changed weeks ago"</i></td>
 </tr>
 <tr>
-<td>4</td>
-<td><b>🎭 Hallucination</b></td>
-<td>LLM confidently makes stuff up</td>
-<td><i>"Where did it get THAT from?!"</i></td>
-</tr>
-<tr>
 <td>5</td>
-<td><b>👻 Lost-in-the-Middle</b></td>
-<td>Critical info ignored because of its position</td>
+<td><b>👻 Context utilization failure</b></td>
+<td>Critical info in context is ignored, for example, due to its position</td>
 <td><i>"The answer was RIGHT THERE in the context"</i></td>
 </tr>
 <tr>
 <td>6</td>
-<td><b>🫠 Semantic Collapse</b></td>
-<td>All docs look the same to the system</td>
-<td><i>"Why does it keep returning random results?"</i></td>
+<td><b>🎭 Hallucination</b></td>
+<td>Whether context is correct or not, LLM confidently makes stuff up</td>
+<td><i>"Where did it get THAT from?!"</i></td>
 </tr>
 <tr>
 <td>7</td>
-<td><b>🙈 No Evaluation</b></td>
-<td>You can't measure quality, so you don't know it's broken</td>
-<td><i>"It seems to work?" (famous last words)</i></td>
+<td><b>🫠 Answer Irrelevance</b></td>
+<td>Context is correct and sufficient, but the response contains parts that not address the query</td>
+<td><i>"That's not what I asked"</i></td>
+</tr>
+<tr>
+<td>8</td>
+<td><b>🙈 Answer Incompleteness</b></td>
+<td>Context is correct and sufficient, but the response is not answering the complete question.</td>
+<td><i>"Correct, but still misses the main point"</i></td>
 </tr>
 </table>
 
@@ -141,13 +147,14 @@ Imagine your RAG system is a pizza delivery service:
 
 | Blind Spot | Pizza Analogy |
 |--------|--------------|
+| **Insufficient or inconsistent sources** | The menu says "gluten-free crust available" but the kitchen says they stopped carrying it last month |
 | **Missed Retrieval** | You ordered pepperoni, they have pepperoni, but the kitchen can't find it so they send you plain cheese |
 | **Context Misalignment** | You asked for "something spicy" and got a pizza with hot sauce packets on the side (technically spicy, not what you meant) |
 | **Stale Indexes** | Menu says $12, but price went up to $15 last month—now you're arguing at checkout |
 | **Hallucination** | You asked about gluten-free options, they confidently say "yes!" (there are none) |
-| **Lost-in-the-Middle** | Your special instructions were "no olives, extra cheese, NO OLIVES"—guess what's on your pizza |
-| **Semantic Collapse** | All pizzas in their system are just labeled "pizza" so they grab whichever one is closest |
-| **No Evaluation** | They never ask "how was your order?" so they think everyone's happy |
+| **Context utilization failure** | They read your note but ignored half the toppings you listed |
+| **Answer Irrelevance** | You asked for pepperoni, they delivered pepperoni—plus a detailed history of Italian cheese-making |
+| **Answer Incompleteness** | You asked for a half-pepperoni half-veggie pizza, they only made the pepperoni half |
 
 </details>
 
@@ -155,7 +162,7 @@ Imagine your RAG system is a pizza delivery service:
 
 | I want to... | Go here |
 |-------------|---------|
-| Understand all 7 blind spots in depth | [🔍 Seven Blind Spots Deep Dive](docs/02a-seven-blind-spots-deep-dive.md) |
+| Understand all 8 blind spots in depth | [🔍 Eight Blind Spots Deep Dive](docs/02a-seven-blind-spots-deep-dive.md) |
 | Run a quick health check | [👃 RAG Smell Test](cheatsheets/rag-smell-test.md) |
 | See real failure case studies | [Deep Dive → Case Studies](docs/02a-seven-blind-spots-deep-dive.md#case-studies-why-ai-assistants-seem-stupid) |
 | Get the full diagnostic checklist | [Deep Dive → Checklist](docs/02a-seven-blind-spots-deep-dive.md#-interactive-diagnostic-checklist) |

@@ -1,6 +1,6 @@
 # 🚨 Failure Modes & How to Prevent Them
 
-> **Production RAG failures cluster into three stages: Retrieval, Generation, and System-level. Understanding these failure modes is the first step to preventing them.**
+> **Production RAG failures cluster into four stages: Source, Retrieval, Generation, and System-level. Understanding these failure modes is the first step to preventing them.**
 
 <details>
 <summary>🍕 <b>TL;DR: Where do RAG systems break?</b></summary>
@@ -9,55 +9,80 @@
 
 Think of RAG like ordering food through a confusing game of telephone:
 
-**Stage 1: Retrieval (Finding the menu)**
+**Stage 0: Sources (Does the menu even have what you want?)**
+- Is the item on the menu at all? (Or is the menu contradictory?)
+
+**Stage 1: Retrieval (Finding the right page)**
 - Did we find the right menu? (Or did we grab last year's?)
 - Did we find the right PAGE of the menu? (Or just "something about food"?)
 
 **Stage 2: Generation (Placing the order)**
 - Did the AI read what we found? (Or make stuff up?)
 - Did it read ALL of it? (Or just the first and last page?)
+- Did it answer what was actually asked? (Or go off on a tangent?)
 
 **Stage 3: System (The whole restaurant)**
-- Can we tell if the food is actually good?
 - Is the whole system working together?
 
-**Most failures happen in Stage 1.** The AI is actually pretty good at answering questions—if you give it the right information. The problem is finding the right information in the first place.
+**Most failures originate in Stage 0 or 1.** The AI is actually pretty good at answering questions—if the right information exists and is found.
 
 </details>
 
 ---
 
-## Overview: The Three Failure Stages
+## Overview: The Four Failure Stages
 
 ```mermaid
 flowchart TD
+    subgraph Stage0["📄 SOURCE STAGE"]
+        R0[Insufficient or Inconsistent Sources]
+    end
+
     subgraph Stage1["🔍 RETRIEVAL STAGE"]
         R1[Missed Retrieval]
         R2[Context Misalignment]
         R3[Stale Indexes]
     end
-    
+
     subgraph Stage2["✨ GENERATION STAGE"]
-        G1[Hallucination]
-        G2[Lost-in-the-Middle]
-        G3[Parametric Override]
+        G1[Context Utilization Failure]
+        G2[Hallucination]
+        G3[Answer Irrelevance]
+        G4[Answer Incompleteness]
     end
-    
+
     subgraph Stage3["⚙️ SYSTEM LEVEL"]
-        S1[Semantic Collapse]
         S2[Compounding Errors]
-        S3[No Evaluation]
     end
     
-    Query[Query] --> Stage1
+    Query[Query] --> Stage0
+    Stage0 -->|"Failures here<br/>cascade down"| Stage1
     Stage1 -->|"Failures here<br/>cascade down"| Stage2
     Stage2 --> Stage3
     Stage3 --> Response[Response]
-    
+
+    style Stage0 fill:#e1bee7
     style Stage1 fill:#ffcdd2
     style Stage2 fill:#fff9c4
     style Stage3 fill:#ffccbc
 ```
+
+---
+
+## Stage 0: Source Failures
+
+### 0.1 Insufficient or Inconsistent Sources
+
+**What happens:** The data sources don't contain the needed information, or contain contradictory information. No downstream optimization can fix this.
+
+**Root causes:**
+| Cause | Description | Mitigation |
+|-------|-------------|------------|
+| Coverage gaps | Key topics not documented | Source gap analysis against common queries |
+| Contradictory sources | Different docs make conflicting claims | Contradiction detection, version control |
+| Stale source material | Source docs themselves are outdated | Regular source audits |
+
+**Detection:** Audit a sample of failed queries to determine whether the answer exists in your sources at all.
 
 ---
 
@@ -173,9 +198,9 @@ metric = FaithfulnessMetric(threshold=0.7)
 
 ---
 
-### 2.2 Lost-in-the-Middle Effect
+### 2.2 Context Utilization Failure
 
-**What happens:** LLMs disproportionately attend to information at the beginning and end of context windows, ignoring the middle.
+**What happens:** Critical information is present in the context but gets ignored by the LLM — for example, due to position bias (the "lost-in-the-middle" effect), context overload, or failure to synthesize across passages.
 
 ```mermaid
 graph LR
@@ -217,45 +242,33 @@ Response: "The fiscal year typically ends on December 31st."
 
 ---
 
-## Stage 3: System-Level Failures
+### 2.4 Answer Irrelevance
 
-### 3.1 Semantic Collapse
-
-**What happens:** When inter-document similarity exceeds ~0.65, retrieval quality degrades non-linearly. Documents become too similar to distinguish.
-
-```mermaid
-graph TD
-    A["Similarity < 0.5"] -->|"Clear differentiation"| B["Good retrieval"]
-    C["Similarity 0.5-0.65"] -->|"Degrading"| D["Acceptable retrieval"]
-    E["Similarity > 0.65"] -->|"Semantic collapse"| F["Poor retrieval"]
-    
-    style E fill:#ffcdd2
-    style F fill:#ef9a9a
-```
+**What happens:** Context is correct and sufficient, but the response includes parts that don't address the query.
 
 **Root causes:**
-- Redundant documents in knowledge base
-- Over-chunking creating similar fragments
-- Embedding model saturation
-
-**Detection:**
-```python
-# Calculate pairwise similarity distribution
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-
-similarities = cosine_similarity(embeddings)
-# Alert if mean similarity > 0.65 or if >20% of pairs exceed 0.7
-```
-
-**Mitigation:**
-- Deduplicate documents before ingestion
-- Use larger, semantically distinct chunks
-- Apply document-level clustering and sampling
+| Cause | Description | Mitigation |
+|-------|-------------|------------|
+| Over-generation | LLM adds unsolicited information | Focused system prompts |
+| Weak query grounding | Response drifts from query scope | Answer relevancy evaluation |
 
 ---
 
-### 3.2 Compounding Errors
+### 2.5 Answer Incompleteness
+
+**What happens:** Context is correct and sufficient, but the response only partially answers the question.
+
+**Root causes:**
+| Cause | Description | Mitigation |
+|-------|-------------|------------|
+| Multi-part queries | LLM addresses only the first facet | Query decomposition |
+| Context overload | Too much context, model skips aspects | Structured output prompting |
+
+---
+
+## Stage 3: System-Level Failures
+
+### 3.1 Compounding Errors
 
 **What happens:** Errors compound across sequential processing layers. A system with 95% accuracy per layer achieves only 81% accuracy across 5 layers.
 
@@ -285,9 +298,9 @@ graph LR
 
 ---
 
-### 3.3 No Evaluation
+### Cross-Cutting Concern: Evaluation
 
-**What happens:** Most RAG systems in production lack systematic evaluation frameworks (industry surveys consistently show the majority of deployments have no automated quality monitoring).
+**What happens:** Most RAG systems in production lack systematic evaluation frameworks (industry surveys consistently show the majority of deployments have no automated quality monitoring). Without evaluation, all blind spots above go undetected.
 
 **Consequences:**
 - Degradation goes unnoticed until users complain
@@ -333,19 +346,20 @@ evaluate(
 
 ---
 
-## The Seven Blind Spots: Summary
+## The Eight Blind Spots: Summary
 
 | # | Blind Spot | Stage | Detection | Quick Win |
 |---|--------|-------|-----------|-----------|
-| 1 | Missed Retrieval | Retrieval | Context recall metric | Hybrid search |
-| 2 | Context Misalignment | Retrieval | Context precision metric | Query routing |
-| 3 | Stale Indexes | Retrieval | Timestamp monitoring | Event-driven updates |
-| 4 | Hallucination | Generation | Faithfulness metric | Grounding prompts |
-| 5 | Lost-in-the-Middle | Generation | Position-aware testing | Relevance ordering |
-| 6 | Semantic Collapse | System | Similarity distribution | Deduplication |
-| 7 | No Evaluation | System | (Meta-problem) | RAG Triad + CI/CD |
+| 1 | Insufficient or inconsistent sources | Source | Source coverage audit | Source gap analysis |
+| 2 | Missed Retrieval | Retrieval | Context recall metric | Hybrid search |
+| 3 | Context Misalignment | Retrieval | Context precision metric | Query routing |
+| 4 | Stale Indexes | Retrieval | Timestamp monitoring | Event-driven updates |
+| 5 | Context Utilization Failure | Generation | Position-aware testing | Relevance ordering |
+| 6 | Hallucination | Generation | Faithfulness metric | Grounding prompts |
+| 7 | Answer Irrelevance | Generation | Answer relevancy metric | Focused prompting |
+| 8 | Answer Incompleteness | Generation | Completeness scoring | Query decomposition |
 
-> 🔍 **Want more?** See the **[Seven Blind Spots Deep Dive](02a-seven-blind-spots-deep-dive.md)** for:
+> 🔍 **Want more?** See the **[Eight Blind Spots Deep Dive](02a-seven-blind-spots-deep-dive.md)** for:
 > - Detailed examples across industries (Healthcare, Legal, Finance, E-commerce)
 > - Real-world case studies explaining why AI assistants seem "stupid"
 > - Interactive diagnostic checklist for auditing your RAG system

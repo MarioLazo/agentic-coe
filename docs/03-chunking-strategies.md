@@ -1,6 +1,6 @@
 # 📄 Chunking Strategies
 
-> **Most RAG failures can be traced back to chunking decisions.** Poor chunking leads to missed retrieval, context misalignment, and semantic collapse — three of the seven blind spots. This section provides actionable guidance for getting chunking right.
+> **Most RAG failures can be traced back to chunking decisions.** Poor chunking leads to missed retrieval and context misalignment — core blind spots that cascade into downstream failures. This section provides actionable guidance for getting chunking right.
 
 <details>
 <summary>🍕 <b>Hold up—what's "chunking"?</b></summary>
