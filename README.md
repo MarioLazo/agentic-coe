@@ -104,7 +104,7 @@ These failures don't throw errors. They don't show up in logs. They just **quiet
 <td>3</td>
 <td><b>🎯 Context Misalignment</b></td>
 <td>Retrieved docs, even if related, do not fully answer the question</td>
-<td><i></i></td>
+<td><i>"Well, sort of, but not really..."</i></td>
 </tr>
 <tr>
 <td>4</td>
