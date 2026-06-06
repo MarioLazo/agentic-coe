@@ -536,6 +536,143 @@ flowchart LR
 
 ---
 
+# 5. Context Utilization Failure — The Attention Blindspot
+
+## What's Happening
+
+Critical information is present in the context but gets ignored by the LLM. The most well-studied cause is the "lost-in-the-middle" effect — LLMs pay more attention to the beginning and end of their context window — but this can also happen due to context overload, conflicting signals in the context, or the model simply failing to synthesize across multiple passages.
+
+```
+Context: [Doc1: intro] [Doc2: setup] [Doc3: THE ANSWER] [Doc4: related] [Doc5: summary]
+
+Position:    1          2            3                    4              5
+Attention:   HIGH       Medium       LOW                  Medium         HIGH
+
+💀 Doc3 has the answer but sits in the attention blindspot
+```
+
+## Why This Goes Unnoticed
+
+- All relevant documents ARE retrieved ✓
+- The answer IS in the context ✓  
+- But the model "skims over" middle sections
+- Response draws from beginning/end, missing the key info
+
+## The Research
+
+From "Lost in the Middle" (Liu et al., 2024):
+- Performance drops 10-25% for information in middle positions
+- Effect is worse with longer contexts
+- Even state-of-the-art models exhibit this bias
+
+```
+Typical attention distribution across 10 documents:
+
+Position:  1     2     3     4     5     6     7     8     9    10
+Attention: 18%   12%   8%    5%    4%    4%    5%    8%    14%  22%
+           ████  ███   ██    █     █     █     █     ██    ███  █████
+           
+           ^-- Beginning bias                    End bias --^
+                        ^-- Middle blindspot --^
+```
+
+## Real-World Examples
+
+| Scenario | Where Answer Was | What Model Used | Result |
+|----------|------------------|-----------------|--------|
+| 10 support tickets, resolution in #5 | Middle | First complaint + last status | Missed the actual fix |
+| 5 policy docs, exception in #3 | Middle | General rules from #1 and #5 | Gave wrong answer |
+| Code context, bug fix in middle function | Middle | Imports + exports | Missed the logic error |
+| Long email thread, key decision in middle | Middle | Original email + latest reply | Wrong context |
+| Multiple product specs, key diff in #4 | Middle | First and last products | Missed differentiation |
+
+## Detection
+
+```python
+def test_position_sensitivity(rag_system, test_cases):
+    """
+    Test if your system has lost-in-the-middle bias
+    """
+    results = []
+    
+    for test in test_cases:
+        # Test with answer in different positions
+        for position in ['first', 'middle', 'last']:
+            # Reorder context to put answer at position
+            reordered_context = reorder_context(
+                test.context, 
+                test.answer_doc, 
+                target_position=position
+            )
+            
+            response = rag_system.query(test.query, reordered_context)
+            correct = test.expected_answer in response
+            
+            results.append({
+                'query': test.query,
+                'answer_position': position,
+                'correct': correct
+            })
+    
+    # Analyze position bias
+    by_position = group_by(results, 'answer_position')
+    return {
+        'first_accuracy': accuracy(by_position['first']),
+        'middle_accuracy': accuracy(by_position['middle']),
+        'last_accuracy': accuracy(by_position['last']),
+        'position_bias': first_accuracy - middle_accuracy  # Should be ~0
+    }
+```
+
+## Fixes
+
+### 🟢 Quick Wins
+| Fix | Implementation |
+|-----|----------------|
+| **Relevance-based ordering** | Most relevant docs first, not by retrieval order |
+| **Reduce context** | Fewer, more relevant docs > many docs |
+| **Section markers** | `### MOST RELEVANT ###` around key content |
+
+### Ordering Strategy
+```python
+def order_by_relevance(query, retrieved_docs, scores):
+    """
+    Order documents by relevance score (highest first)
+    Puts most important information in high-attention positions
+    """
+    sorted_pairs = sorted(zip(scores, retrieved_docs), reverse=True)
+    return [doc for score, doc in sorted_pairs]
+
+def sandwich_ordering(query, retrieved_docs, scores):
+    """
+    Alternative: Put most relevant at start AND end
+    Medium relevance in middle
+    """
+    sorted_pairs = sorted(zip(scores, retrieved_docs), reverse=True)
+    high_relevance = sorted_pairs[:len(sorted_pairs)//3]
+    mid_relevance = sorted_pairs[len(sorted_pairs)//3:2*len(sorted_pairs)//3]
+    low_relevance = sorted_pairs[2*len(sorted_pairs)//3:]
+    
+    # Sandwich: high, mid, high
+    return high_relevance + mid_relevance + low_relevance[::-1]
+```
+
+### 🟡 Medium Effort
+| Fix | Implementation |
+|-----|----------------|
+| **Context compression** | Summarize less relevant docs |
+| **Multi-turn retrieval** | Break into multiple smaller context calls |
+| **Explicit highlighting** | Bold/emphasize key passages |
+
+### 🔴 Deep Fixes
+| Fix | Implementation |
+|-----|----------------|
+| **Chunked reasoning** | Process each doc separately, then synthesize |
+| **Map-reduce** | Summarize each chunk, then summarize summaries |
+| **Attention steering** | Fine-tune to attend uniformly |
+
+---
+
 # 6. Hallucination — Confident Fabrication
 
 ## What's Happening
@@ -696,143 +833,6 @@ QUESTION: {query}
 | **Fine-tune for faithfulness** | Train on grounded response examples |
 | **Constrained decoding** | Only allow tokens that appear in context |
 | **Multi-model consensus** | Multiple LLMs must agree |
-
----
-
-# 5. Context Utilization Failure — The Attention Blindspot
-
-## What's Happening
-
-Critical information is present in the context but gets ignored by the LLM. The most well-studied cause is the "lost-in-the-middle" effect — LLMs pay more attention to the beginning and end of their context window — but this can also happen due to context overload, conflicting signals in the context, or the model simply failing to synthesize across multiple passages.
-
-```
-Context: [Doc1: intro] [Doc2: setup] [Doc3: THE ANSWER] [Doc4: related] [Doc5: summary]
-
-Position:    1          2            3                    4              5
-Attention:   HIGH       Medium       LOW                  Medium         HIGH
-
-💀 Doc3 has the answer but sits in the attention blindspot
-```
-
-## Why This Goes Unnoticed
-
-- All relevant documents ARE retrieved ✓
-- The answer IS in the context ✓  
-- But the model "skims over" middle sections
-- Response draws from beginning/end, missing the key info
-
-## The Research
-
-From "Lost in the Middle" (Liu et al., 2024):
-- Performance drops 10-25% for information in middle positions
-- Effect is worse with longer contexts
-- Even state-of-the-art models exhibit this bias
-
-```
-Typical attention distribution across 10 documents:
-
-Position:  1     2     3     4     5     6     7     8     9    10
-Attention: 18%   12%   8%    5%    4%    4%    5%    8%    14%  22%
-           ████  ███   ██    █     █     █     █     ██    ███  █████
-           
-           ^-- Beginning bias                    End bias --^
-                        ^-- Middle blindspot --^
-```
-
-## Real-World Examples
-
-| Scenario | Where Answer Was | What Model Used | Result |
-|----------|------------------|-----------------|--------|
-| 10 support tickets, resolution in #5 | Middle | First complaint + last status | Missed the actual fix |
-| 5 policy docs, exception in #3 | Middle | General rules from #1 and #5 | Gave wrong answer |
-| Code context, bug fix in middle function | Middle | Imports + exports | Missed the logic error |
-| Long email thread, key decision in middle | Middle | Original email + latest reply | Wrong context |
-| Multiple product specs, key diff in #4 | Middle | First and last products | Missed differentiation |
-
-## Detection
-
-```python
-def test_position_sensitivity(rag_system, test_cases):
-    """
-    Test if your system has lost-in-the-middle bias
-    """
-    results = []
-    
-    for test in test_cases:
-        # Test with answer in different positions
-        for position in ['first', 'middle', 'last']:
-            # Reorder context to put answer at position
-            reordered_context = reorder_context(
-                test.context, 
-                test.answer_doc, 
-                target_position=position
-            )
-            
-            response = rag_system.query(test.query, reordered_context)
-            correct = test.expected_answer in response
-            
-            results.append({
-                'query': test.query,
-                'answer_position': position,
-                'correct': correct
-            })
-    
-    # Analyze position bias
-    by_position = group_by(results, 'answer_position')
-    return {
-        'first_accuracy': accuracy(by_position['first']),
-        'middle_accuracy': accuracy(by_position['middle']),
-        'last_accuracy': accuracy(by_position['last']),
-        'position_bias': first_accuracy - middle_accuracy  # Should be ~0
-    }
-```
-
-## Fixes
-
-### 🟢 Quick Wins
-| Fix | Implementation |
-|-----|----------------|
-| **Relevance-based ordering** | Most relevant docs first, not by retrieval order |
-| **Reduce context** | Fewer, more relevant docs > many docs |
-| **Section markers** | `### MOST RELEVANT ###` around key content |
-
-### Ordering Strategy
-```python
-def order_by_relevance(query, retrieved_docs, scores):
-    """
-    Order documents by relevance score (highest first)
-    Puts most important information in high-attention positions
-    """
-    sorted_pairs = sorted(zip(scores, retrieved_docs), reverse=True)
-    return [doc for score, doc in sorted_pairs]
-
-def sandwich_ordering(query, retrieved_docs, scores):
-    """
-    Alternative: Put most relevant at start AND end
-    Medium relevance in middle
-    """
-    sorted_pairs = sorted(zip(scores, retrieved_docs), reverse=True)
-    high_relevance = sorted_pairs[:len(sorted_pairs)//3]
-    mid_relevance = sorted_pairs[len(sorted_pairs)//3:2*len(sorted_pairs)//3]
-    low_relevance = sorted_pairs[2*len(sorted_pairs)//3:]
-    
-    # Sandwich: high, mid, high
-    return high_relevance + mid_relevance + low_relevance[::-1]
-```
-
-### 🟡 Medium Effort
-| Fix | Implementation |
-|-----|----------------|
-| **Context compression** | Summarize less relevant docs |
-| **Multi-turn retrieval** | Break into multiple smaller context calls |
-| **Explicit highlighting** | Bold/emphasize key passages |
-
-### 🔴 Deep Fixes
-| Fix | Implementation |
-|-----|----------------|
-| **Chunked reasoning** | Process each doc separately, then synthesize |
-| **Map-reduce** | Summarize each chunk, then summarize summaries |
-| **Attention steering** | Fine-tune to attend uniformly |
 
 ---
 
@@ -1682,6 +1682,41 @@ Before starting, gather:
 
 ---
 
+## 5. Context Utilization Failure Audit
+
+### Quick Checks
+| Check | How to Test | Pass | Fail |
+|-------|-------------|------|------|
+| □ **Context ordering** | Are retrieved docs sorted by relevance? | Yes | Arbitrary order |
+| □ **Context size** | How many chunks in typical context? | <6 | >10 |
+| □ **Section markers** | Are important sections marked? | Yes | No |
+| □ **Compression** | Are less relevant chunks summarized? | Yes | All full length |
+
+### Deep Checks
+```
+□ Position sensitivity test
+  Same query, answer in different positions:
+  - First position accuracy: _____%
+  - Middle position accuracy: _____%
+  - Last position accuracy: _____%
+  
+  Difference (first - middle): _____% (should be <5%)
+  
+□ Context length analysis
+  Average context tokens: _____
+  Recommendation: Keep under 4000 tokens if possible
+```
+
+### Red Flags 🚩
+```
+□ Responses draw mostly from first/last chunks
+□ Critical information frequently in middle positions
+□ Very long contexts (>10 chunks)
+□ Accuracy varies based on doc position
+```
+
+---
+
 ## 6. Hallucination Audit
 
 ### Quick Checks
@@ -1717,41 +1752,6 @@ Before starting, gather:
 □ Entity names/proper nouns not in sources
 □ "According to..." claims that can't be verified
 □ Consistent details that were never provided
-```
-
----
-
-## 5. Context Utilization Failure Audit
-
-### Quick Checks
-| Check | How to Test | Pass | Fail |
-|-------|-------------|------|------|
-| □ **Context ordering** | Are retrieved docs sorted by relevance? | Yes | Arbitrary order |
-| □ **Context size** | How many chunks in typical context? | <6 | >10 |
-| □ **Section markers** | Are important sections marked? | Yes | No |
-| □ **Compression** | Are less relevant chunks summarized? | Yes | All full length |
-
-### Deep Checks
-```
-□ Position sensitivity test
-  Same query, answer in different positions:
-  - First position accuracy: _____%
-  - Middle position accuracy: _____%
-  - Last position accuracy: _____%
-  
-  Difference (first - middle): _____% (should be <5%)
-  
-□ Context length analysis
-  Average context tokens: _____
-  Recommendation: Keep under 4000 tokens if possible
-```
-
-### Red Flags 🚩
-```
-□ Responses draw mostly from first/last chunks
-□ Critical information frequently in middle positions
-□ Very long contexts (>10 chunks)
-□ Accuracy varies based on doc position
 ```
 
 ---
