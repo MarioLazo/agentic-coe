@@ -61,7 +61,7 @@ The repository already has strong attribution infrastructure:
 
 | Pattern | Origin | Status |
 |---------|--------|--------|
-| "Seven Blind Spots" naming | **Original to this guide** | ✅ OK - original synthesis |
+| "Blind Spots" naming | **Original to this guide** | ✅ OK - original synthesis |
 | "RAG Smell Test" | **Original to this guide** | ✅ OK - original content |
 | Pizza delivery analogy | **Original to this guide** | ✅ OK - original content |
 | "The Confident Bullshitter" analogy | **Original to this guide** | ✅ OK - original content |
@@ -114,7 +114,7 @@ The repository already has strong attribution infrastructure:
 
 The following are **original contributions** of this guide:
 
-1. **"Seven Blind Spots" Framework** - Original naming and categorization
+1. **"Blind Spots" Framework** - Original naming and categorization
 2. **Pizza Delivery Analogy** - Original explanatory metaphor
 3. **RAG Smell Test** - Original diagnostic tool
 4. **Dating App Problem** analogy - Original explanation

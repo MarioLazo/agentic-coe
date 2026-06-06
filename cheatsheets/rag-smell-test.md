@@ -321,7 +321,7 @@ Action Items:
 
 ## 🔗 Related Resources
 
-- [🔍 Seven Blind Spots Deep Dive](../docs/02a-seven-blind-spots-deep-dive.md) — Full explanation with case studies
+- [🔍 Blind Spots Deep Dive](../docs/02a-seven-blind-spots-deep-dive.md) — Full explanation with case studies
 - [📐 Evaluation Metrics](evaluation-metrics.md) — How to measure properly
 - [🚨 Danger Zones Checklist](danger-zones-checklist.md) — Pre-flight checks
 

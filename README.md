@@ -77,7 +77,7 @@ Follow the [Documentation Index](docs/README.md) for the complete learning path 
 
 ---
 
-### 🔍 The Eight Blind Spots
+### 🔍 The Blind Spots
 
 These failures don't throw errors. They don't show up in logs. They just **quietly deliver wrong answers** while your metrics look fine.
 
@@ -162,7 +162,7 @@ Imagine your RAG system is a pizza delivery service:
 
 | I want to... | Go here |
 |-------------|---------|
-| Understand all 8 blind spots in depth | [🔍 Eight Blind Spots Deep Dive](docs/02a-seven-blind-spots-deep-dive.md) |
+| Understand the blind spots in depth | [🔍 Blind Spots Deep Dive](docs/02a-seven-blind-spots-deep-dive.md) |
 | Run a quick health check | [👃 RAG Smell Test](cheatsheets/rag-smell-test.md) |
 | See real failure case studies | [Deep Dive → Case Studies](docs/02a-seven-blind-spots-deep-dive.md#case-studies-why-ai-assistants-seem-stupid) |
 | Get the full diagnostic checklist | [Deep Dive → Checklist](docs/02a-seven-blind-spots-deep-dive.md#-interactive-diagnostic-checklist) |

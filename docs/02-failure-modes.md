@@ -346,7 +346,7 @@ evaluate(
 
 ---
 
-## The Eight Blind Spots: Summary
+## The Blind Spots: Summary
 
 | # | Blind Spot | Stage | Detection | Quick Win |
 |---|--------|-------|-----------|-----------|
@@ -359,7 +359,7 @@ evaluate(
 | 7 | Answer Irrelevance | Generation | Answer relevancy metric | Focused prompting |
 | 8 | Answer Incompleteness | Generation | Completeness scoring | Query decomposition |
 
-> 🔍 **Want more?** See the **[Eight Blind Spots Deep Dive](02a-seven-blind-spots-deep-dive.md)** for:
+> 🔍 **Want more?** See the **[Blind Spots Deep Dive](02a-seven-blind-spots-deep-dive.md)** for:
 > - Detailed examples across industries (Healthcare, Legal, Finance, E-commerce)
 > - Real-world case studies explaining why AI assistants seem "stupid"
 > - Interactive diagnostic checklist for auditing your RAG system
