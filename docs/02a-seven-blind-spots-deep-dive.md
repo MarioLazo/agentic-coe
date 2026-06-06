@@ -1539,6 +1539,45 @@ Before starting, gather:
 
 ---
 
+## 1. Insufficient or Inconsistent Sources Audit
+
+### Quick Checks
+| Check | How to Test | Pass | Fail |
+|-------|-------------|------|------|
+| □ **Coverage test** | For 20 common queries, verify the answer exists in your sources | Answer found in sources | Answer not present at all |
+| □ **Contradiction scan** | Search for the same key fact across multiple documents | Consistent across docs | Conflicting claims found |
+| □ **Version control** | Is there a single authoritative version of each document? | Yes, versioned | Multiple versions coexist |
+| □ **Completeness check** | Do sources cover all major topic areas users ask about? | Coverage confirmed | Significant gaps exist |
+
+### Deep Checks
+```
+□ Source gap analysis
+  Sample 50 recent failed queries
+  Queries where answer doesn't exist in sources: ___/50
+  Queries where sources contradict each other: ___/50
+
+□ Contradiction detection
+  Select 10 key facts (prices, policies, specs)
+  Check each across all source documents
+  Facts with contradictions: ___/10 (should be 0)
+
+□ Source freshness audit
+  List the 10 most important source documents
+  Oldest document last updated: _____
+  Average time since last review: _____ days
+```
+
+### Red Flags 🚩
+```
+□ Users report "the AI gave me wrong information that wasn't in the docs"
+□ Same question returns different answers on different days
+□ Source documents from multiple years coexist with no version tagging
+□ No process for adding new topics when users ask about them
+□ Failed queries cluster around the same topic area
+```
+
+---
+
 ## 2. Missed Retrieval Audit
 
 ### Quick Checks
@@ -1713,6 +1752,86 @@ Before starting, gather:
 □ Critical information frequently in middle positions
 □ Very long contexts (>10 chunks)
 □ Accuracy varies based on doc position
+```
+
+---
+
+## 7. Answer Irrelevance Audit
+
+### Quick Checks
+| Check | How to Test | Pass | Fail |
+|-------|-------------|------|------|
+| □ **Focused system prompt** | Does prompt instruct model to answer only what was asked? | Yes | No or vague |
+| □ **Response length check** | Are short factual queries getting short answers? | Yes | Over-verbose |
+| □ **Answer relevancy metric** | Is RAGAS answer_relevancy or equivalent tracked? | Yes, >0.8 | Not measured |
+| □ **User feedback signal** | Are users reporting answers that go off-topic? | Rare/none | Common complaint |
+
+### Deep Checks
+```
+□ Answer relevancy evaluation
+  Run answer_relevancy metric on 30 query/response pairs
+  Mean score: _____ (target: >0.8)
+  Responses with score <0.6: ___/30
+
+□ Sentence-level relevance check (manual, 10 responses)
+  For each response, mark each sentence as:
+    - Directly answers query
+    - Related background
+    - Unsolicited/off-topic
+  Off-topic sentence ratio: _____% (target: <10%)
+
+□ Query-type calibration
+  Short factual queries (e.g. "What is X?")
+    Average response length: _____ words
+    Target: <100 words for simple facts
+```
+
+### Red Flags 🚩
+```
+□ Responses include lengthy preambles before getting to the answer
+□ Simple "what is X" questions get multi-paragraph essays
+□ Users ask "can you just answer the question?"
+□ High faithfulness scores but low user satisfaction ratings
+□ Responses include unsolicited warnings, caveats, or background info
+```
+
+---
+
+## 8. Answer Incompleteness Audit
+
+### Quick Checks
+| Check | How to Test | Pass | Fail |
+|-------|-------------|------|------|
+| □ **Multi-part query handling** | Do queries with multiple sub-questions get all parts answered? | All parts covered | Only first part answered |
+| □ **Query decomposition** | Is there logic to break complex queries into sub-queries? | Yes | No |
+| □ **Completeness prompting** | Does system prompt remind model to address all parts? | Yes | No |
+| □ **Follow-up rate** | Are users frequently asking follow-ups to get the rest of their answer? | Low follow-up rate | High follow-up rate |
+
+### Deep Checks
+```
+□ Multi-part query test (create 20 queries with 2-3 explicit sub-questions)
+  Queries where all parts answered: ___/20
+  Queries where only first part answered: ___/20
+  Queries where parts were missed: ___/20
+
+□ Completeness scoring
+  For 20 responses, manually score: what % of the question was answered?
+  Average completeness: _____%  (target: >90%)
+  Responses below 70% completeness: ___/20
+
+□ Follow-up analysis
+  Of 50 recent user sessions, count queries that were follow-ups to a previous answer
+  Follow-up rate: _____%
+  Common follow-up patterns: _____________________
+```
+
+### Red Flags 🚩
+```
+□ Users frequently follow up with "and what about X?" where X was in the original query
+□ Responses to multi-part questions clearly stop after the first part
+□ "Compare A and B on X, Y, and Z" only returns A vs B on X
+□ Responses feel complete but user satisfaction is low
+□ High answer accuracy but users still need multiple turns to get full info
 ```
 
 ---
