@@ -1,4 +1,4 @@
-# 🔍 The Eight Blind Spots: A Deep Dive
+# 🔍 The RAG Blind Spots: A Deep Dive
 
 > **Why your RAG system seems "stupid" and how to fix it. A practical guide with real failure scenarios, diagnostic tools, and battle-tested solutions.**
 
@@ -1522,7 +1522,7 @@ User frustrated, escalated to human
 
 # 📋 Interactive Diagnostic Checklist
 
-Use this checklist to audit your RAG system for the Eight Blind Spots.
+Use this checklist to audit your RAG system for the Blind Spots.
 
 ---
 
@@ -2023,7 +2023,7 @@ This deep dive synthesizes concepts and research from multiple sources:
 - **Semantic Collapse Thresholds:** Practitioner experience and vector database documentation
 
 ### Original Content
-The "Eight Blind Spots" framework, "RAG Smell Test," case study patterns, and all 🍕 layman explanations are original educational content created for this guide.
+The "Blind Spots" framework, "RAG Smell Test," case study patterns, and all 🍕 layman explanations are original educational content created for this guide.
 
 For complete academic citations, see [Academic References](../resources/academic-references.md).
 
