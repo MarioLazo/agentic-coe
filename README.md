@@ -1,426 +1,111 @@
-<div align="center">
+# Agentic CoE
 
-# 🔍 RAG Production Guide
+**The practitioner's map for industrializing AI agents — the operating model, governance, and quality gates that move agents from pilots to production.**
 
-### A Practitioner's Handbook for Building RAG Systems That Actually Work
+Most enterprise AI programs don't fail on the technology. They fail because nothing around the technology is built to fund it, govern it, or scale it. Agents get deployed by whoever had budget, nobody can say how many are running, and the first real incident arrives before anyone has designed what happens next.
 
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Contributors](https://img.shields.io/github/contributors/MarioLazo/rag-production-guide)](https://github.com/MarioLazo/rag-production-guide/graphs/contributors)
+This repository holds the working tools for fixing that: the templates, scorecards, and checklists an Agentic Center of Excellence actually runs on.
 
-**80%+ of AI projects fail — twice the rate of conventional IT projects.** This guide shows you how to beat those odds.
+> **Status: active, unevenly deep — deliberately.** Grounding (Layer 2) is the developed layer: failure modes, chunking, hybrid search, evaluation, cost engineering, and platform guides, built over six years of applied work. The other six layers are mapped but thinner. Tools are published when they're finished and field-tested, never as placeholders.
 
-[Why RAG Fails](#-why-rag-fails) •
-[Architecture](#️-architecture) •
-[Case Studies](#-illustrative-case-studies) •
-[Cheatsheets](#-cheatsheets) •
-[Platform Guides](#️-platform-guides) •
-[Contributing](#-contributing) •
-[Disclaimers](#️-disclaimers)
-
-</div>
+*This repository was previously `rag-production-guide`. The RAG material is intact under [`docs/`](docs/) — it's now framed as one layer of a larger operating model rather than the whole subject. Old links redirect automatically.*
 
 ---
 
-## 📖 About This Guide
+## Where this comes from
 
-Whether you're an ML engineer debugging retrieval issues, an architect evaluating platforms, or a technical leader building the business case for RAG—this guide meets you where you are.
+This work is drawn from:
 
-This repository distills findings from **30+ authoritative sources**—including research from IBM, OpenAI, Anthropic, Microsoft, AWS, Google, NVIDIA, and leading open-source frameworks—combined with patterns from published case studies and industry benchmarks.
+- **623+ case studies and production implementations** reviewed and analyzed
+- **65+ practitioner interviews** — Data Scientists, CTOs, CIOs, VPs, and the people actually running these systems
+- Direct enterprise delivery experience across healthcare, financial services, telecom, and complex operations
 
-> **The core insight:** The "vector DB + LLM" recipe that dominates blog posts fails in practice. Success requires **modular architecture**, **hybrid retrieval**, **rigorous evaluation**, and **deliberate cost engineering**.
+The bias throughout is toward what survived contact with production. Where something is a hypothesis rather than an observed pattern, it says so.
 
----
+### What this is not
 
-## 🎯 How to Use This Guide
+- **Not a vendor playbook.** Platform guides exist ([Azure](docs/platform-guides/azure-ai-search.md), [AWS](docs/platform-guides/aws-bedrock.md), [GCP](docs/platform-guides/gcp-vertex-ai.md), [Databricks](docs/platform-guides/databricks-mosaic.md)) but the frameworks are deliberately vendor-agnostic.
+- **Not a tutorial.** It assumes you've built something and hit the wall.
+- **Not claimed to be current.** Pages carry a last-reviewed date and a confidence score. Trust them accordingly.
+- **Not a playbook to follow.** The goal is first principles and honest lessons — including the ones that cost me something to learn.
 
-### ⚡ Quick Start (30 min)
-1. [Executive Summary](docs/01-executive-summary.md) — Why 80% fail
-2. [Danger Zones Checklist](cheatsheets/danger-zones-checklist.md) — Pre-flight check
-3. One [Case Study](case-studies/) of your choice
-
-### 📖 Core Concepts (2-3 hours)
-1. [Failure Modes](docs/02-failure-modes.md) → [Chunking](docs/03-chunking-strategies.md) → [Hybrid Search](docs/04-hybrid-search.md)
-2. [Evaluation Framework](docs/07-evaluation-framework.md)
-3. [Cost Engineering](docs/08-cost-engineering.md)
-
-### 🧠 Deep Dive (Full day)
-Follow the [Documentation Index](docs/README.md) for the complete learning path with all 8 core documents, platform guides, and case studies.
-
-### Who This Is For
-
-| Role | What You'll Get |
-|------|-----------------|
-| 🔧 **ML/AI Engineers** | Implementation patterns, code examples, evaluation frameworks |
-| 🏗️ **Solution Architects** | Architecture decisions, platform comparisons, integration patterns |
-| 📊 **Technical Leaders** | ROI frameworks, risk assessment, vendor evaluation criteria |
+The bias throughout is toward **how things fail and how you'd know**, rather than how to build them. Failure modes are more transferable than success stories, and far less written about.
 
 ---
 
-## 🚨 Why RAG Fails
+## The tools
 
-<div align="center">
+Each one stands alone. You don't need the others, or the book, to use any of them.
 
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                    THE STARK REALITY                            │
-├─────────────────────────────────────────────────────────────────┤
-│  📉 80%+ of AI projects fail (2× the rate of non-AI IT)         │
-│  📉 48% never reach production                                  │
-│  📉 42% of AI projects abandoned in 2025 (↑ from 17% in 2024)   │
-│  📉 95% of GenAI pilots report zero measurable P&L impact       │
-└─────────────────────────────────────────────────────────────────┘
-```
-*Sources: RAND Corporation 2024, Gartner 2024, S&P Global 2025, MIT NANDA 2025*
-
-</div>
+| Tool | What it does | Use it when |
+|---|---|---|
+| **[Agent Card](tools/agent-card.md)** | One-page spec every production agent needs — owner, risk tier, autonomy, escalation, kill switch | Before any agent reaches production |
+| **[Pre-Flight Checklist](tools/pre-flight-checklist.md)** | Ten quality gates between "it works on my machine" and "it's live" | At the deployment gate, every time |
+| **[BXT Scorecard](tools/bxt-scorecard.md)** | Scores use cases on Business value, eXecutability, and Trust — so funding goes to what can actually ship | Portfolio and roadmap planning |
+| **[RAG Smell Test](cheatsheets/rag-smell-test.md)** | Fast diagnostic for whether a retrieval system is actually working | Reviewing someone else's RAG build |
+| **[Danger Zones Checklist](cheatsheets/danger-zones-checklist.md)** | The failure modes worth checking before they find you | Design review |
 
 ---
 
-### 🔍 The Blind Spots
+## The framework spine
 
-These failures don't throw errors. They don't show up in logs. They just **quietly deliver wrong answers** while your metrics look fine.
+Nine frameworks, each with one job, sequenced by where they apply. Tools above map to the stages in bold.
 
-<table>
-<tr>
-<th>#</th>
-<th>Blind Spot</th>
-<th>What Goes Wrong</th>
-<th>Smell Test 👃</th>
-</tr>
-<tr>
-<td>1</td>
-<td><b>📄 Insufficient or inconsistent sources</b></td>
-<td>The data sources do not have the information intended or are inconsistent in material ways</td>
-<td><i>"X = P..." but "When Y is Z, X is non-P"</i></td>
-</tr>
-<tr>
-<td>2</td>
-<td><b>🔍 Missed Retrieval</b></td>
-<td>The required information isn't retrieved due to, for example, semantic collapse</td>
-<td><i>"I know we have a doc about this..."</i></td>
-</tr>
-<tr>
-<td>3</td>
-<td><b>🎯 Context Misalignment</b></td>
-<td>Retrieved docs, even if related, do not fully answer the question</td>
-<td><i>"Well, sort of, but not really..."</i></td>
-</tr>
-<tr>
-<td>4</td>
-<td><b>📅 Stale Indexes</b></td>
-<td>Outdated info served as current truth</td>
-<td><i>"That price/policy changed weeks ago"</i></td>
-</tr>
-<tr>
-<td>5</td>
-<td><b>👻 Context utilization failure</b></td>
-<td>Critical info in context is ignored, for example, due to its position</td>
-<td><i>"The answer was RIGHT THERE in the context"</i></td>
-</tr>
-<tr>
-<td>6</td>
-<td><b>🎭 Hallucination</b></td>
-<td>Whether context is correct or not, LLM confidently makes stuff up</td>
-<td><i>"Where did it get THAT from?!"</i></td>
-</tr>
-<tr>
-<td>7</td>
-<td><b>🫠 Answer Irrelevance</b></td>
-<td>Context is correct and sufficient, but the response contains parts that not address the query</td>
-<td><i>"That's not what I asked"</i></td>
-</tr>
-<tr>
-<td>8</td>
-<td><b>🙈 Answer Incompleteness</b></td>
-<td>Context is correct and sufficient, but the response is not answering the complete question.</td>
-<td><i>"Correct, but still misses the main point"</i></td>
-</tr>
-</table>
+| Stage | The question it answers | Framework |
+|---|---|---|
+| **Select** | Which use cases deserve funding? | **BXT** — Business value × eXecutability × Trust |
+| **Diagnose** | Are we solving the right problem? | **The Meaning Gap** — Run × Reason |
+| **Classify** | What are we actually building? | **Four Modes** → **Agent Patterns** → **Risk Tiers** |
+| **Build** | How does it get assembled? | **The Seven-Layer Stack** |
+| **Ship** | Is it ready? | **Production Gate Question** → **Pre-Flight Checklist** → **Agent Card** |
+| **Operate** | Is it still working? | **The Three Drifts** |
+| **Scale** | Where are we as an organization? | **Agent Factory Maturity Model** |
 
-<details>
-<summary><b>🍕 ELI5: The Pizza Delivery Analogy</b></summary>
+Two of these carry most of the weight:
 
-<br/>
+**The Meaning Gap** — the distance between what a system optimizes and what the organization actually needs. Assessed on two axes: *Run* (can it execute reliably?) and *Reason* (is it reasoning about the right problem?). Most organizations measure only Run. The dangerous quadrant is **Precise but Wrong** — high operational confidence in a system solving the wrong problem. *Presented at the Toronto Machine Learning Summit.*
 
-Imagine your RAG system is a pizza delivery service:
-
-| Blind Spot | Pizza Analogy |
-|--------|--------------|
-| **Insufficient or inconsistent sources** | The menu says "gluten-free crust available" but the kitchen says they stopped carrying it last month |
-| **Missed Retrieval** | You ordered pepperoni, they have pepperoni, but the kitchen can't find it so they send you plain cheese |
-| **Context Misalignment** | You asked for "something spicy" and got a pizza with hot sauce packets on the side (technically spicy, not what you meant) |
-| **Stale Indexes** | Menu says $12, but price went up to $15 last month—now you're arguing at checkout |
-| **Hallucination** | You asked about gluten-free options, they confidently say "yes!" (there are none) |
-| **Context utilization failure** | They read your note but ignored half the toppings you listed |
-| **Answer Irrelevance** | You asked for pepperoni, they delivered pepperoni—plus a detailed history of Italian cheese-making |
-| **Answer Incompleteness** | You asked for a half-pepperoni half-veggie pizza, they only made the pepperoni half |
-
-</details>
-
-#### ⚡ Quick Links
-
-| I want to... | Go here |
-|-------------|---------|
-| Understand the blind spots in depth | [🔍 Blind Spots Deep Dive](docs/02a-seven-blind-spots-deep-dive.md) |
-| Run a quick health check | [👃 RAG Smell Test](cheatsheets/rag-smell-test.md) |
-| See real failure case studies | [Deep Dive → Case Studies](docs/02a-seven-blind-spots-deep-dive.md#case-studies-why-ai-assistants-seem-stupid) |
-| Get the full diagnostic checklist | [Deep Dive → Checklist](docs/02a-seven-blind-spots-deep-dive.md#-interactive-diagnostic-checklist) |
+**The Production Gate Question** — *"If this agent gives the right answer to the wrong question, how would you know?"* Not rhetorical. It needs a specific operational answer before architecture work begins. The most dangerous response is a confident, fast one from a team that has never considered it.
 
 ---
 
-## 🏗️ Architecture
+## The Agent Factory
 
-### The Modular RAG Pattern
+If you've run manufacturing, supply chain, or distribution, you already have the mental model:
 
-```mermaid
-flowchart LR
-    subgraph Ingestion["📥 Ingestion"]
-        A[Documents] --> B[Chunking]
-        B --> C[Embedding]
-        C --> D[(Vector Store)]
-    end
-    
-    subgraph Retrieval["🔍 Retrieval"]
-        E[Query] --> F{Hybrid Search}
-        F -->|BM25| D
-        F -->|Vector| D
-        D --> G[Reranker]
-    end
-    
-    subgraph Generation["✨ Generation"]
-        G --> H[Context Assembly]
-        H --> I[LLM]
-        I --> J[Response + Citations]
-    end
-    
-    style Ingestion fill:#e1f5fe
-    style Retrieval fill:#fff3e0
-    style Generation fill:#e8f5e9
-```
+| Manufacturing | Agent Factory |
+|---|---|
+| Supply chains | Data pipelines |
+| Assembly line | CI/CD |
+| Defect rates | Hallucination rates |
+| Safety protocols | Governance |
 
-### Key Architectural Insights
-
-| Component | Recommendation | Why |
-|-----------|---------------|-----|
-| **Chunking** | 400-512 tokens, 10-20% overlap | Most failures trace back to chunking decisions |
-| **Search** | Hybrid BM25 + Vector with RRF | Pure vector search has fundamental bottlenecks |
-| **Reranking** | Cross-encoder on top-20 results | 49-67% retrieval failure reduction |
-| **Context** | Contextual Retrieval preprocessing | Single highest-ROI improvement available |
-
-> 📚 **Deep Dives:**
-> - [Chunking Strategies](docs/03-chunking-strategies.md)
-> - [Hybrid Search](docs/04-hybrid-search.md)
-> - [Mental Models & First Principles](docs/05-mental-models.md)
-> - [Advanced Patterns](docs/06-advanced-patterns.md)
+The value of the metaphor is that it makes the CFO conversation tractable. "How much will this cost?" becomes a unit-economics answer — cost per unit, quality threshold, and a trajectory — instead of a platform license discussion.
 
 ---
 
-## 📋 Illustrative Case Studies
+## Who this is for
 
-Composite examples designed to teach RAG patterns with transparent ROI methodology. Each case study includes:
-- 📊 Public benchmark-based estimates (sources cited)
-- ❌ Common failure patterns and root causes
-- ✅ Solution patterns and lessons learned
-- 💰 Back-of-envelope ROI calculation methodology
-
-| Case Study | Industry Pattern | Key Learning |
-|------------|-----------------|--------------|
-| [Healthcare Document Processing](case-studies/01-healthcare-document-ai.md) | Document Classification | ROI estimation from public benchmarks |
-| [Technical Support AI-Agent](case-studies/02-medtech-support-agent.md) | Field Service / Support | Decision tree + RAG hybrid architecture |
-| [Enterprise Knowledge Mining](case-studies/03-enterprise-knowledge-bot.md) | Enterprise Search | Hybrid search and platform selection |
-
-> 📚 **Framework:** [The 5 Danger Zones](case-studies/README.md#the-5-danger-zones-framework)
+- **CIOs, CDOs, and transformation leaders** who need to fund and govern agent programs, not just approve them
+- **Architects and platform teams** standing up the CoE and the quality gates
+- **Practitioners** who have production scar tissue and want to compare notes
 
 ---
 
-## 📊 Cheatsheets
+## Stay with it
 
-Quick-reference guides for common decisions:
+New tools, case breakdowns, and the thinking behind them get published as they're finished.
 
-| Cheatsheet | Description |
-|------------|-------------|
-| [👃 RAG Smell Test](cheatsheets/rag-smell-test.md) | 5-minute health check—is something off? ⭐ NEW |
-| [🌳 Chunking Decision Tree](cheatsheets/chunking-decision-tree.md) | Visual guide for chunk size selection |
-| [⚖️ Hybrid Search Weights](cheatsheets/hybrid-search-weights.md) | Domain-specific BM25/vector weights |
-| [🚨 Danger Zones Checklist](cheatsheets/danger-zones-checklist.md) | Pre-flight checklist before production |
-| [📏 Evaluation Metrics](cheatsheets/evaluation-metrics.md) | RAG Triad + extended metrics |
-| [💰 Cost Optimization](cheatsheets/cost-optimization.md) | From $18K/month to sustainable |
+- **Follow along:** [LinkedIn](https://www.linkedin.com/in/mariolazo/) — where new tools get announced
+- **Go deeper:** the newsletter, for the reasoning behind each framework and what didn't work
+- **Collaborate:** I'm actively looking for research collaboration and thought partnership — practitioners with production experience, researchers working on evaluation and governance, and people building community around this. Open an issue or reach out on LinkedIn.
 
 ---
 
-## ☁️ Platform Guides
+## About
 
-Practical implementation guidance for major platforms:
-
-| Platform | Guide | Key Services |
-|----------|-------|--------------|
-| ![AWS](https://img.shields.io/badge/AWS-232F3E?style=flat&logo=amazon-aws&logoColor=white) | [AWS Bedrock](docs/platform-guides/aws-bedrock.md) | Bedrock, Kendra, OpenSearch, S3 Vectors |
-| ![Azure](https://img.shields.io/badge/Azure-0078D4?style=flat&logo=microsoft-azure&logoColor=white) | [Azure AI](docs/platform-guides/azure-ai-search.md) | AI Search, OpenAI Service, Document Intelligence |
-| ![GCP](https://img.shields.io/badge/GCP-4285F4?style=flat&logo=google-cloud&logoColor=white) | [Google Vertex AI](docs/platform-guides/gcp-vertex-ai.md) | Vertex AI Search, Gemini, Document AI |
-| ![Databricks](https://img.shields.io/badge/Databricks-FF3621?style=flat&logo=databricks&logoColor=white) | [Databricks](docs/platform-guides/databricks-mosaic.md) | Mosaic AI, Vector Search, MLflow |
-| ![UiPath](https://img.shields.io/badge/UiPath-FA4616?style=flat&logo=uipath&logoColor=white) | [UiPath](docs/platform-guides/uipath-automation.md) | AI Center, Document Understanding, Orchestrator |
+Maintained by **[Mario Lazo](https://github.com/MarioLazo)** — Data & AI transformation, enterprise AI strategy, and AI governance. Co-author of *AI Data Privacy and Protection* (Technics Publications, 2024). Currently writing a book on building the Agentic Center of Excellence.
 
 ---
 
-## 📈 Evaluation Framework
-
-The industry-standard **RAG Triad**:
-
-```mermaid
-flowchart TD
-    subgraph Triad["📐 RAG Triad"]
-        A[Answer Relevancy] 
-        B[Faithfulness]
-        C[Context Relevancy]
-    end
-    
-    A -->|"Is the response relevant<br/>to the question?"| Q[Query]
-    B -->|"Is the response grounded<br/>in retrieved context?"| R[Response]
-    C -->|"Is the retrieved context<br/>relevant?"| D[Documents]
-```
-
-| Tool | Stars | Best For |
-|------|-------|----------|
-| [RAGAS](https://github.com/explodinggradients/ragas) | ~12K | Reference-free evaluation, synthetic test data |
-| [DeepEval](https://github.com/confident-ai/deepeval) | ~12K | CI/CD integration, 50+ metrics, red-teaming |
-| [AutoRAG](https://github.com/Marker-Inc-Korea/AutoRAG) | ~5K | AutoML-style pipeline optimization |
-
-> 📚 **Deep Dive:** [Evaluation Framework](docs/07-evaluation-framework.md)
-
----
-
-## 💰 Cost Engineering
-
-RAG costs grow **exponentially**, not linearly. A documented case reached **$18K/month** before optimization.
-
-| Optimization | Savings | Implementation |
-|-------------|---------|----------------|
-| **Semantic Caching** | 18-68% | Cache query-response pairs by embedding similarity |
-| **Model Routing** | 30-80% | Route simple queries to cheaper models |
-| **Prompt Optimization** | Up to 35% | Concise instructions, context pruning |
-| **Batch Inference** | 50% | Non-real-time workloads |
-
-**Total potential savings: 70-85%** with the full optimization stack.
-
-> 📚 **Deep Dive:** [Cost Engineering](docs/08-cost-engineering.md)
-
----
-
-## 🤝 Contributing
-
-We welcome contributions from the community! This guide improves with diverse production experiences, and we especially value insights from **practitioners in the trenches** and **researchers pushing the boundaries**.
-
-Your personal and lived experience matters—whether you've shipped RAG systems at scale, recovered from spectacular failures, or discovered novel techniques worth sharing.
-
-### Ways to Contribute
-
-| Contribution | Description |
-|--------------|-------------|
-| 🐛 **Report Issues** | Found errors or outdated information? Let us know |
-| 📝 **Share Case Studies** | Add anonymized stories from your production experience |
-| 🔧 **Improve Examples** | Enhance platform-specific implementations |
-| 🔬 **Add Research** | Link relevant papers or share experimental findings |
-| 🌐 **Translate** | Help make this guide accessible in other languages |
-| 📊 **Visualize** | Add diagrams, flowcharts, or decision trees |
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
-
----
-
-## 🙏 Acknowledgments
-
-This guide stands on the shoulders of giants. We're deeply grateful to:
-
-### Open Source Community
-- **[RAGFlow](https://github.com/infiniflow/ragflow)** by InfiniFlow — Production-ready RAG with deep document understanding
-- **[RAGAS](https://github.com/explodinggradients/ragas)** by Exploding Gradients — Reference-free evaluation framework
-- **[DeepEval](https://github.com/confident-ai/deepeval)** by Confident AI — Production testing with 50+ metrics
-- **[AutoRAG](https://github.com/Marker-Inc-Korea/AutoRAG)** by Marker Inc — AutoML-style pipeline optimization
-- **[Athina AI Cookbooks](https://github.com/athina-ai/rag-cookbooks)** — Complete taxonomy from Naive → Agentic
-
-### Enterprise & Research
-- **Microsoft** — Azure AI Search, GraphRAG, GPT-RAG patterns
-- **AWS** — Bedrock samples, RAG reference architectures
-- **Google** — Vertex AI, Gemini integration patterns
-- **Databricks** — GenAI Cookbook, MLflow evaluation
-- **NVIDIA** — GPU-accelerated RAG blueprints
-- **IBM** — Granite community cookbooks
-
-See [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md) for the complete list.
-
----
-
-## 📚 Resources
-
-- [Official Vendor Repositories](resources/official-vendor-repos.md)
-- [Community Projects](resources/community-repos.md)
-- [Further Reading](resources/further-reading.md)
-- [Glossary](resources/glossary.md)
-
----
-
-## ⚠️ Disclaimers
-
-<details>
-<summary><b>📚 Educational Content</b></summary>
-
-This guide is provided for **educational and informational purposes only**. It does not constitute professional advice. Before making significant technology or business decisions, consult with qualified professionals appropriate to your situation.
-</details>
-
-<details>
-<summary><b>🔬 Curated Knowledge, Not Proprietary Information</b></summary>
-
-This guide is a **curated synthesis** of:
-- **Peer-reviewed academic research** — Published papers from EACL, ICLR, NAACL, TACL, and other venues ([see references](resources/academic-references.md))
-- **Open-source frameworks** — Publicly available GitHub repositories from Microsoft, AWS, Google, and the community
-- **Industry benchmarks** — Published statistics from S&P Global, RAND Corporation, MIT NANDA, Gartner, McKinsey, Stanford HAI, AHIMA, AHA, and other research organizations
-- **Community knowledge** — Patterns shared by practitioners in public forums, conferences, and published case studies
-
-**No proprietary or confidential information is included.** All sources are publicly available and cited.
-</details>
-
-<details>
-<summary><b>🎭 Composite Case Studies</b></summary>
-
-The case studies in this guide are **composite illustrations** created for educational purposes. They:
-- **Do not represent any specific company** or client engagement
-- **Combine patterns** observed across multiple public sources and industry research
-- **Use modified details** including scale, timelines, and technical specifics
-- **Employ illustrative financial estimates** based on published industry benchmarks
-
-Any resemblance to actual organizations is coincidental.
-</details>
-
-<details>
-<summary><b>💰 Financial Estimates</b></summary>
-
-All financial figures (costs, savings, ROI) are **illustrative estimates** based on:
-- Published industry benchmarks (cited in each case study)
-- Back-of-envelope calculation methodology (shown transparently)
-- Conservative ranges rather than point estimates
-
-**Your actual results will vary** based on your specific context, implementation quality, organizational factors, and market conditions. These figures are intended to teach estimation methodology, not to guarantee outcomes.
-</details>
-
-<details>
-<summary><b>📜 No Warranty</b></summary>
-
-This content is provided "as is" without warranty of any kind, express or implied. The authors and contributors are not liable for any damages arising from the use of this information.
-</details>
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License—see the [LICENSE](LICENSE) file for details.
-
----
-
-<div align="center">
-
-**Built with ❤️ by practitioners, for practitioners**
-
-[⬆ Back to Top](#-rag-production-guide)
-
-</div>
+*Frameworks and tools here are released for practitioner use. Attribution appreciated.*
