@@ -118,7 +118,7 @@ Maintained by **[Mario Lazo](https://github.com/MarioLazo)** — Data & AI trans
 
 ## License
 
-Licensed under **[CC BY 4.0](LICENSE)** — use it, adapt it, build on it, including
+Licensed under **[CC BY 4.0](LICENSE)** ([plain-language summary](NOTICE.md)) — use it, adapt it, build on it, including
 commercially. **Attribution is required.**
 
 > "Agentic CoE" by Mario Lazo (https://github.com/MarioLazo), licensed under CC BY 4.0.
