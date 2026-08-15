@@ -44,6 +44,7 @@ Each one stands alone. You don't need the others, or the book, to use any of the
 | **[BXT Scorecard](tools/bxt-scorecard.md)** | Scores use cases on Business value, eXecutability, and Trust — so funding goes to what can actually ship | Portfolio and roadmap planning |
 | **[RAG Smell Test](cheatsheets/rag-smell-test.md)** | Fast diagnostic for whether a retrieval system is actually working | Reviewing someone else's RAG build |
 | **[Danger Zones Checklist](cheatsheets/danger-zones-checklist.md)** | The failure modes worth checking before they find you | Design review |
+| **[MCP Catalog](tools/mcp-catalog.md)** | Model Context Protocol servers organized by blast radius, with the governance each tier requires | Choosing what your agents can reach |
 
 ---
 
