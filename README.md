@@ -116,4 +116,15 @@ Maintained by **[Mario Lazo](https://github.com/MarioLazo)** — Data & AI trans
 
 ---
 
-*Frameworks and tools here are released for practitioner use. Attribution appreciated.*
+## License
+
+Licensed under **[CC BY 4.0](LICENSE)** — use it, adapt it, build on it, including
+commercially. **Attribution is required.**
+
+> "Agentic CoE" by Mario Lazo (https://github.com/MarioLazo), licensed under CC BY 4.0.
+
+Frameworks, curriculum, and written material here are original work. Copyright is
+retained; the license grants reuse with credit, it does not transfer ownership.
+
+*Previously MIT-licensed. Material published before 2026-08-15 remains available
+under the terms it was released with.*

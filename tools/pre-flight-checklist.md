@@ -115,4 +115,4 @@ A waiver with no expiry is a permanent gap wearing a temporary label.
 
 ---
 
-*Part of [Agentic CoE](../README.md). Released for practitioner use — attribution appreciated.*
+*Part of [Agentic CoE](../README.md). Licensed [CC BY 4.0](../LICENSE) — reuse freely, including commercially, **with attribution**.*
