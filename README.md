@@ -45,6 +45,7 @@ Each one stands alone. You don't need the others, or the book, to use any of the
 | **[RAG Smell Test](cheatsheets/rag-smell-test.md)** | Fast diagnostic for whether a retrieval system is actually working | Reviewing someone else's RAG build |
 | **[Danger Zones Checklist](cheatsheets/danger-zones-checklist.md)** | The failure modes worth checking before they find you | Design review |
 | **[MCP Catalog](tools/mcp-catalog.md)** | Model Context Protocol servers organized by blast radius, with the governance each tier requires | Choosing what your agents can reach |
+| **[Skills Catalog](tools/skills-catalog.md)** | Agent skills across Claude Code, Codex, Cursor, and Copilot — portability, context cost, and how to evaluate whether one actually helped | Choosing how your agents work |
 
 ---
 
