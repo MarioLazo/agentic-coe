@@ -122,6 +122,12 @@ Concretely: which clients may connect to which servers, which users may invoke w
 
 ---
 
+## Going deeper by vertical
+
+This catalog is deliberately cross-industry — it organizes by blast radius, which applies everywhere. For **finance and healthcare specifically**, the [Agent Factory Reference](../reference/agent-factory-regulated-industries.md) carries dedicated MCP server sections for each, alongside the regulatory context that determines which of them you can actually deploy.
+
+---
+
 ## Selection checklist
 
 Before adding any server to a production stack:

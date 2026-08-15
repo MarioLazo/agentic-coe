@@ -47,6 +47,12 @@ Each one stands alone. You don't need the others, or the book, to use any of the
 | **[MCP Catalog](tools/mcp-catalog.md)** | Model Context Protocol servers organized by blast radius, with the governance each tier requires | Choosing what your agents can reach |
 | **[Skills Catalog](tools/skills-catalog.md)** | Agent skills across Claude Code, Codex, Cursor, and Copilot — portability, context cost, and how to evaluate whether one actually helped | Choosing how your agents work |
 
+### Reference
+
+**[Agent Factory — Regulated Industries Edition](reference/agent-factory-regulated-industries.md)** — a curated 11,000-word index for finance, healthcare, and supply chain: agent frameworks and orchestration, vetted repos by vertical, MCP servers for finance and healthcare, ontologies and knowledge graphs, datasets, papers and associations, a regulatory reference guide, and deployment checklists.
+
+Where domain expertise is critical and governance isn't optional, the hard part is knowing what's already been built and what's actually usable. This is that map.
+
 ---
 
 ## The framework spine
