@@ -24,7 +24,7 @@ For a solid foundation:
 
 ### 🧠 Deep Dive (Full day)
 For comprehensive understanding:
-1. All core docs (01-08) in order
+1. All core docs (01-11) in order
 2. All case studies
 3. Relevant platform guide
 4. Cheatsheets for reference
@@ -36,13 +36,16 @@ For comprehensive understanding:
 | # | Document | Description | Reading Time |
 |---|----------|-------------|--------------|
 | 01 | [Executive Summary](01-executive-summary.md) | Why RAG fails, who this is for, key insights | 10 min |
-| 02 | [Failure Modes](02-failure-modes.md) | The blind spots across 4 failure stages | 15 min |
+| 02 | [Failure Modes](02-failure-modes.md) | The eight blind spots across 4 failure stages | 15 min |
 | 03 | [Chunking Strategies](03-chunking-strategies.md) | Most failures start here; decision framework | 15 min |
 | 04 | [Hybrid Search](04-hybrid-search.md) | BM25 + Vector search with RRF fusion | 12 min |
 | 05 | [Mental Models](05-mental-models.md) | First principles thinking for RAG | 15 min |
 | 06 | [Advanced Patterns](06-advanced-patterns.md) | 9 patterns from Contextual Retrieval to GraphRAG | 20 min |
 | 07 | [Evaluation Framework](07-evaluation-framework.md) | RAG Triad, RAGAS, DeepEval, CI/CD integration | 15 min |
 | 08 | [Cost Engineering](08-cost-engineering.md) | From $18K/month to sustainable production | 12 min |
+| 09 | [Metadata & Knowledge Layers](09-metadata-and-knowledge-layers.md) | Structuring documents into a filterable, connected knowledge base | 15 min |
+| 10 | [Feedback Loops & Refinement](10-feedback-loops-and-refinement.md) | Capturing signals and closing the improvement loop | 15 min |
+| 11 | [Human-in-the-Loop](11-human-in-the-loop.md) | Routing, confidence scoring, and retraining triggers | 15 min |
 
 ---
 
