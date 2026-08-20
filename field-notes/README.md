@@ -12,4 +12,4 @@ publication schedule, deliberately.
 
 | Date | Entry | What it covers |
 |---|---|---|
-| _first entry in progress_ | | |
+| 2026-08-19 | [Meaning Gap in a Real Build](2026-08-19-meaning-gap-in-a-real-build.md) | Building and reviewing a compliance-RAG capstone (ARIA) surfaces the Meaning Gap, the Production Gate Question, and the Pre-Flight Checklist as things that actually happened, not just frameworks — including a query-rewrite bug caught by ground-truth eval rather than by hope. |
